@@ -8,7 +8,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.18.1
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: .venv
 #     language: python
 #     name: python3
 # ---
@@ -21,14 +21,10 @@
 # In this notebook, you'll:
 #
 # - ✅ Install [Agent Development Kit (ADK)](https://google.github.io/adk-docs/)
-# - ✅ Configure your API key to use the Gemini model
-# - ✅ Build your first simple agent
-# - ✅ Run your agent and watch it use a tool (like Google Search) to answer a question
+# - ✅ Build your first simple agent (we have configured it to use **OpenRouter** with the **DeepSeek** model via `LiteLlm`.)
+# - ✅ Run your agent and watch it use a tool (like a calculator) to perform calculations
 #
-# ## ‼️ Please Read
-#
-# > ❌ **ℹ️ Note: No submission required!**
-# > This notebook is for your hands-on practice and learning only. You **do not** need to submit it anywhere to complete the course.
+# **⏱️ Expected Reading Time:** 15 Minutes
 #
 # > ⏸️ **Note:** Avoid using the **Run all** cells command as this can trigger a QPM limit resulting in 429 errors when calling the backing model. Suggested flow is to run each cell in order - one at a time.
 
@@ -40,24 +36,24 @@
 # To install and use ADK in your Python development environment, run:
 #
 # ```
-# pip install google-adk
+# pip install google-adk litellm
 # ```
 
 # %% [markdown]
-# ### 1.2: Configure your Gemini API Key
+# ### 1.2: Configure your OpenRouter API Key
 #
-# This notebook uses the [Gemini API](https://ai.google.dev/gemini-api/docs), which requires authentication.
+# This notebook uses **OpenRouter** to access the DeepSeek model.
 #
 # **1. Get your API key**
 #
-# If you don't have one already, create an [API key in Google AI Studio](https://aistudio.google.com/app/api-keys).
+# Create an account and key at [openrouter.ai](https://openrouter.ai/).
 #
 # **2. Set your API key as an environment variable**
 #
-# Set the `GOOGLE_API_KEY` environment variable with your API key. You can do this by:
+# Set the `OPENROUTER_API_KEY` environment variable.
 #
-# - Setting it in your shell: `export GOOGLE_API_KEY="your-api-key-here"`
-# - Or setting it in your Python code (see the cell below)
+# - Shell: `export OPENROUTER_API_KEY="sk-or-..."`
+# - Python: (see cell below)
 #
 # **3. Authenticate in the notebook**
 #
@@ -67,14 +63,11 @@
 import os
 
 # Set your API key here, or set it as an environment variable before running
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-if not GOOGLE_API_KEY:
-    # If not set as environment variable, you can set it directly here (not recommended for production)
-    # GOOGLE_API_KEY = "your-api-key-here"
-    print("⚠️ Warning: GOOGLE_API_KEY not found. Please set it as an environment variable or in the code above.")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+if not OPENROUTER_API_KEY:
+    print("⚠️ Warning: OPENROUTER_API_KEY not found. Please set it as an environment variable.")
 else:
-    os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
-    print("✅ Gemini API key setup complete.")
+    print("✅ Setup complete.")
 
 # %% [markdown]
 # ### 1.3: Import ADK components
@@ -83,54 +76,13 @@ else:
 
 # %%
 from google.adk.agents import Agent
-from google.adk.models.google_llm import Gemini
+# Using LiteLlm to connect to DeepSeek via OpenRouter
+from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import InMemoryRunner
-from google.adk.tools import google_search
-from google.genai import types
+from google.adk.tools import FunctionTool
 
 print("✅ ADK components imported successfully.")
 
-# %% [markdown]
-# ### 1.4: Helper functions
-#
-# We'll define some helper functions for accessing the ADK web UI.
-
-# %%
-# Define helper functions that will be reused throughout the notebook
-
-from IPython.core.display import display, HTML
-from jupyter_server.serverapp import list_running_servers
-
-
-# Helper function to get the ADK web UI URL
-# Note: This is a simplified version. In production, you may need to configure
-# proxy settings based on your deployment environment.
-def get_adk_proxy_url():
-    """
-    Get the URL prefix for accessing the ADK web UI.
-    Adjust this based on your deployment environment.
-    """
-    ADK_PORT = "8000"
-    # For local development, the UI is typically available at http://localhost:8000
-    # For cloud environments, you may need to configure proxy settings
-    url_prefix = f"/proxy/{ADK_PORT}"
-    return url_prefix
-
-
-print("✅ Helper functions defined.")
-
-# %% [markdown]
-# ### 1.5: Configure Retry Options
-#
-# When working with LLMs, you may encounter transient errors like rate limits or temporary service unavailability. Retry options automatically handle these failures by retrying the request with exponential backoff.
-
-# %%
-retry_config=types.HttpRetryOptions(
-    attempts=5,  # Maximum retry attempts
-    exp_base=7,  # Delay multiplier
-    initial_delay=1, # Initial delay before first retry (in seconds)
-    http_status_codes=[429, 500, 503, 504] # Retry on these HTTP errors
-)
 
 # %% [markdown]
 # ---
@@ -147,7 +99,61 @@ retry_config=types.HttpRetryOptions(
 #
 # `Prompt -> Agent -> Thought -> Action -> Observation -> Final Answer`
 #
-# In this notebook, we'll build an agent that can take the action of searching Google. Let's see the difference!
+# In this notebook, we'll build an agent that can take the action of performing calculations. Let's see the difference!
+
+# %% [markdown]
+# ### 2.1.1: Create Calculator Tool
+#
+# We'll create a simple calculator tool that can perform basic math operations.
+
+# %%
+def calculate(expression: str) -> dict:
+    """Evaluate a mathematical expression and return the result.
+    
+    This tool can perform basic arithmetic operations: addition (+), subtraction (-),
+    multiplication (*), division (/), and exponentiation (**).
+    
+    Args:
+        expression: A string containing a mathematical expression to evaluate.
+                   Examples: "2 + 2", "10 * 5", "100 / 4", "2 ** 3"
+    
+    Returns:
+        Dictionary with status and calculation result.
+        Success: {"status": "success", "result": 4.0}
+        Error: {"status": "error", "error_message": "Invalid expression"}
+    """
+    try:
+        # Simple validation - only allow numbers, operators, and parentheses
+        allowed_chars = set("0123456789+-*/.() ")
+        if not all(c in allowed_chars for c in expression.replace(" ", "")):
+            return {
+                "status": "error",
+                "error_message": "Expression contains invalid characters. Only numbers and basic operators (+, -, *, /, **) are allowed."
+            }
+        
+        # Evaluate the expression safely (restricted environment)
+        result = eval(expression, {"__builtins__": {}}, {})
+        
+        return {
+            "status": "success",
+            "result": float(result) if isinstance(result, (int, float)) else result
+        }
+    except ZeroDivisionError:
+        return {
+            "status": "error",
+            "error_message": "Division by zero is not allowed"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error_message": f"Calculation failed: {str(e)}"
+        }
+
+
+# Create the FunctionTool from our calculator function
+calculator_tool = FunctionTool(func=calculate)
+
+print("✅ Calculator tool created.")
 
 # %% [markdown]
 # ### 2.2 Define your agent
@@ -159,20 +165,18 @@ retry_config=types.HttpRetryOptions(
 # These are the main properties we'll set:
 #
 # - **name** and **description**: A simple name and description to identify our agent.
-# - **model**: The specific LLM that will power the agent's reasoning. We'll use "gemini-2.5-flash-lite".
+# - **model**: The specific LLM that will power the agent's reasoning. We'll use DeepSeek via OpenRouter.
 # - **instruction**: The agent's guiding prompt. This tells the agent what its goal is and how to behave.
-# - **tools**: A list of [tools](https://google.github.io/adk-docs/tools/) that the agent can use. To start, we'll give it the `google_search` tool, which lets it find up-to-date information online.
+# - **tools**: A list of [tools](https://google.github.io/adk-docs/tools/) that the agent can use. We'll give it a simple calculator tool for performing math operations.
 
 # %%
 root_agent = Agent(
-    name="helpful_assistant",
-    model=Gemini(
-        model="gemini-2.5-flash-lite",
-        retry_options=retry_config
-    ),
-    description="A simple agent that can answer general questions.",
-    instruction="You are a helpful assistant. Use Google Search for current info or if unsure.",
-    tools=[google_search],
+    name="calculator_assistant",
+    # Using LiteLlm with DeepSeek model via OpenRouter
+    model=LiteLlm(model="openrouter/deepseek/deepseek-chat"),
+    description="A simple agent that can perform mathematical calculations.",
+    instruction="You are a helpful calculator assistant. When users ask for calculations, use the calculate tool to perform the math operations.",
+    tools=[calculator_tool],
 )
 
 print("✅ Root Agent defined.")
@@ -180,7 +184,10 @@ print("✅ Root Agent defined.")
 # %% [markdown]
 # ### 2.3 Run your agent
 #
-# Now it's time to bring your agent to life and send it a query. To do this, you need a [`Runner`](https://google.github.io/adk-docs/runtime/), which is the central component within ADK that acts as the orchestrator. It manages the conversation, sends our messages to the agent, and handles its responses.
+# Now it's time to bring your agent to life and send it a query. To do this, you need a [`Runner`](https://google.github.io/adk-docs/runtime/), which is the central component within ADK that acts as the **orchestrator** - It manages the conversation:
+#
+# 1. sends our messages to the agent
+# 2. and handles its responses
 #
 # **a. Create an `InMemoryRunner` and tell it to use our `root_agent`:**
 
@@ -199,18 +206,21 @@ print("✅ Runner created.")
 
 # %%
 response = await runner.run_debug(
-    "What is Agent Development Kit from Google? What languages is the SDK available in?"
+    "What is 25 * 17 + 42?"
 )
 
+# %%
+print(response[0].content.parts[-1].text)
+
 # %% [markdown]
-# You can see a summary of ADK and its available languages in the response.
+# You can see the calculation result in the response.
 #
 # ### 2.4 How does it work?
 #
-# The agent performed a Google Search to get the latest information about ADK, and it knew to use this tool because:
+# The agent performed a calculation using the calculator tool, and it knew to use this tool because:
 #
 # 1. The agent inspects and is aware of which tools it has available to use.
-# 2. The agent's instructions specify the use of the search tool to get current information or if it is unsure of an answer.
+# 2. The agent's instructions specify using the calculator tool for math operations.
 #
 # The best way to see the full, detailed trace of the agent's thoughts and actions is in the **ADK web UI**, which we'll set up later in this notebook.
 #
@@ -219,51 +229,16 @@ response = await runner.run_debug(
 # %% [markdown]
 # ### 🚀 2.5 Your Turn!
 #
-# This is your chance to see the agent in action. Ask it a question that requires current information.
+# This is your chance to see the agent in action. Ask it to perform some calculations!
 #
 # Try one of these, or make up your own:
 #
-# - What's the weather in London?
-# - Who won the last soccer world cup?
-# - What new movies are showing in theaters now?
+# - What is 123 * 456?
+# - Calculate 1000 / 25 + 50
+# - What's 2 to the power of 10?
 
 # %%
-response = await runner.run_debug("What's the weather in London?")
-
-# %% [markdown]
-# ---
-#
-# ## 💻 Section 3: Try the ADK Web Interface
-#
-# ### Overview
-#
-# ADK includes a built-in web interface for interactively chatting with, testing, and debugging your agents.
-#
-# <img width="1200" src="https://storage.googleapis.com/github-repo/adk-tutorials/day1/adk-web-ui.gif" alt="ADK Web UI" />
-#
-# To use the ADK web UI, you'll need to create an agent with Python files using the `adk create` command.
-#
-# Run the command below to generate a `sample-agent` folder that contains all the necessary files, including `agent.py` for your code, an `.env` file with your API key pre-configured, and an `__init__.py` file:
-
-# %%
-# !adk create sample-agent --model gemini-2.5-flash-lite --api_key $GOOGLE_API_KEY
-
-# %% [markdown]
-# Get the URL prefix to access the ADK web UI:
-
-# %%
-url_prefix = get_adk_proxy_url()
-
-# %% [markdown]
-# Now we can run ADK web:
-
-# %%
-# !adk web --url_prefix {url_prefix}
-
-# %% [markdown]
-# Now you can access the ADK dev UI. The web interface allows you to interact with your ADK agent.
-#
-# Note: This sample agent does not have any tools enabled (like Google Search). It is a basic agent designed specifically to let you explore the UI features.
+response = await runner.run_debug("What is 123 * 456?")
 
 # %% [markdown]
 # ---
@@ -273,10 +248,6 @@ url_prefix = get_adk_proxy_url()
 # You've built and run your first agent with ADK! You've just seen the core concept of agent development in action.
 #
 # The big takeaway is that your agent didn't just *respond*—it **reasoned** that it needed more information and then **acted** by using a tool. This ability to take action is the foundation of all agent-based AI.
-#
-# **ℹ️ Note: No submission required!**
-#
-# This notebook is for your hands-on practice and learning only. You **do not** need to submit it anywhere to complete the course.
 #
 # ### 📚 Learn More
 #
