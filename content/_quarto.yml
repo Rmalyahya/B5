@@ -10,6 +10,9 @@ website:
     left:
       - href: index.qmd
         text: "Home"
+  sidebar: 
+    style: docked
+    search: true
 
 execute:
   # https://quarto.org/docs/computations/python.html#kernel-daemon
@@ -23,14 +26,14 @@ execute:
 
 format:
   html:
-    theme: [cosmo, custom.scss]
+    theme: [cosmo, assets/sdaia.scss]
     toc: true
     toc-depth: 3
     toc-title: "Contents"
     anchor-sections: true
     
   revealjs:
-    theme: [default, custom.scss]
+    theme: [default, assets/sdaia.scss]
     slide-number: c/t
     show-slide-number: all
     transition: slide

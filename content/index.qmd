@@ -1,0 +1,14 @@
+---
+title: "Index"
+format: "html"
+---
+
+## Pre-requisites
+
+- Python Basics. To prepare or refresh: [المقدمة البايثونية للبرمجة باللغة العربية](https://halgoz.quarto.pub/pythonia/)
+
+
+
+## Schedule
+
+[Click to access the Schedule](https://docs.google.com/spreadsheets/d/1I8qq_lphrymOCXXQTBf7ieL2SdGovz_wwqj93PLz2mQ/edit?usp=sharing)
