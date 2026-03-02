@@ -1,5 +1,4 @@
 ---
-title: "Index"
 format: "html"
 ---
 
@@ -7,7 +6,9 @@ format: "html"
 
 - Python Basics. To prepare or refresh: [المقدمة البايثونية للبرمجة باللغة العربية](https://halgoz.quarto.pub/pythonia/)
 
-
+| Lesson | Description | Material | Assignments |
+| ------ | ----------- | -------- | ----------- |
+| 1      |             |          |             | 
 
 ## Schedule
 
