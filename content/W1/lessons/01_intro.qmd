@@ -3,7 +3,7 @@ title: "Introduction to Applied AI Bootcamp"
 format: revealjs
 ---
 
-[![Figure: Program Info](../assets/program_info.png){fig-align="center"}](https://athkax.sdaia.gov.sa/programs/a0a75987-ce88-4477-8c72-55b645a89987).
+![](../assets/program_info.png){fig-align="center"}
 
 
 ## Schedule
@@ -149,18 +149,9 @@ Your brain wants comfort; but as we all know- No pain. No gain. This is true for
 2. You are honest and consistent in putting in the required effort
 3. You make lots programming trial and errors to gain skills
 
-## Evaluations
+## Aseesments
 
-Towards the end of the course, expect to be tested in a **one-to-one interview** (max 10 questions). You should be able to:
-
-1. express the ideas accurately in your own words (memorization + understanding)
-2. answer matching the level of detail required by the question (stay within topic)
-3. know when to say "I don't know" (awareness of knowledge/skill gaps)
-
-Questions will be related to the learning material: **knowledge and skills** that have been covered thus far.
-
+- Towards the end of the course, expect a quiz.
+- Questions related to learning material that have been covered thus far.
 - Mostly from this week
-- some from last week
-- and few from previous weeks
-
-If you score less than full, you'll have a second chance next week to correct based, on previous weeks' material again.
+- Some from previous weeks

@@ -76,7 +76,7 @@ In this course we learn to:
 - **Object-oriented Programming**
     1. Given a class, tell what is the purpose of `__init__` method
     2. Tell which dunder method maps to the `+` operator
-    3. Distinguish between the term "function" and the term "object"
+    3. Distinguish between the term "function" and the term "method"
     4. Explain the function of the `self` argument in Python's methods
     5. Recognize that class instances are individual entities separate from the class itself
     6. Given a code snippet with class inheritance, predict the output
