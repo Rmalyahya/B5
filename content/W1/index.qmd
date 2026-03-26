@@ -2,10 +2,13 @@
 format: "html"
 ---
 
-## Module 1: Introduction
+First of all, [Welcome to the Applied AI Bootcamp!](./lessons/01_bootcamp_intro.qmd).
 
-1. [Bootcamp Introduction](./lessons/01_bootcamp_intro.qmd)
-2. [IDE Setup](./lessons/02_ide_setup.qmd)
+## Module 1: Setup
+
+1. [Terminal: Shell Basics](./lessons/02_shell.qmd)
+2. [IDE: VS Code Basics](./lessons/03_vs_code.qmd)
+3. [Version Control: Git and GitHub](./lessons/04_source_control.qmd)
 
 ## Module 2: Syntax and Procedural Semantics
 

@@ -80,7 +80,7 @@ You will do most of the work.
 - **When?**: to be done in class.
 
 
-## Submit your Work
+## Submit your Work {#submit-your-work}
 
 Your GitHub repo is your **proof-of-work**. Open the repo [HassanAlgoz/python](https://github.com/HassanAlgoz/python/tree/main) then:
 
